@@ -11,50 +11,44 @@ import java.io.IOException;
 
 public class AirCraftGame extends JPanel implements ActionListener, KeyListener {
     private Timer timer;
-    private int aircraftX = 250, aircraftY = 50; // Aircraft position
-    private int gunX = 250, gunY = 450; // Gun position
-    private ArrayList<int[]> bullets = new ArrayList<>(); // Stores bullet positions
+    private int aircraftX = 250, aircraftY = 50;
+    private int gunX = 250, gunY = 450;
+    private ArrayList<int[]> bullets = new ArrayList<>();
     private boolean gameOver = false;
+    private boolean exploded = false;
+    private boolean movingRight = true;
     private int score = 0;
     private int timeElapsed = 0;
-    private Image aircraftImage, gunImage;
+    private Image aircraftImage, gunImage, explosionImage, fireImage;
 
-    // Sound clips
     private Clip shootClip, gameOverClip;
 
     public AirCraftGame() {
-        timer = new Timer(50, this); // Refresh every 50ms
+        timer = new Timer(50, this);
         timer.start();
         addKeyListener(this);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
 
-        // Load aircraft image
         aircraftImage = new ImageIcon("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\Aircraft.png").getImage();
-
-        // Load gun image
         gunImage = new ImageIcon("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\140mm.png").getImage();
 
-        // Load sound effects
+//        explosionImage = new ImageIcon("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\explosion.png").getImage();
+        fireImage = new ImageIcon("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\fire.png").getImage();
+
         loadSounds();
 
-        // Bullet firing every second
         new Timer(1000, e -> shootBullet()).start();
-
-        // Timer counter
         new Timer(1000, e -> timeElapsed++).start();
     }
 
-    // Method to load sound effects
     private void loadSounds() {
         try {
-            // Load shoot sound
             File shootSoundFile = new File("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\gunsound.wav");
             AudioInputStream shootAudio = AudioSystem.getAudioInputStream(shootSoundFile);
             shootClip = AudioSystem.getClip();
             shootClip.open(shootAudio);
 
-            // Load game over sound
             File gameOverSoundFile = new File("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\explode.wav");
             AudioInputStream gameOverAudio = AudioSystem.getAudioInputStream(gameOverSoundFile);
             gameOverClip = AudioSystem.getClip();
@@ -65,41 +59,44 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
         }
     }
 
-    // Method to play sound
     private void playSound(Clip clip) {
         if (clip != null) {
-            clip.setFramePosition(0); // Rewind to the start
-            clip.start(); // Play the sound
+            clip.setFramePosition(0);
+            clip.start();
         }
     }
 
     public void shootBullet() {
         if (!gameOver) {
             bullets.add(new int[]{gunX + 20, gunY});
-            playSound(shootClip); // Play the shoot sound
+            playSound(shootClip);
         }
     }
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // Load background image
-        Image backgroundImage = new ImageIcon("C:\\Users\\USER\\Desktop\\backg.jpeg").getImage();
-
-        // Draw the background image
+        Image backgroundImage = new ImageIcon("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\bg.jpg").getImage();
         if (backgroundImage != null) {
             g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
         }
 
-        // Draw aircraft image with fallback if not loaded
-        if (aircraftImage != null) {
-            g.drawImage(aircraftImage, aircraftX, aircraftY, 100, 80, this);
+        if (exploded) {
+//            if (explosionImage != null) {
+//                g.drawImage(explosionImage, aircraftX, aircraftY, 100, 80, this);
+//            }
+            if (fireImage != null) {
+                g.drawImage(fireImage, aircraftX + 20, aircraftY + 20, 60, 60, this);
+            }
         } else {
-            g.setColor(Color.WHITE);
-            g.fillRect(aircraftX, aircraftY, 60, 30);
+            if (aircraftImage != null) {
+                g.drawImage(aircraftImage, aircraftX, aircraftY, 100, 80, this);
+            } else {
+                g.setColor(Color.WHITE);
+                g.fillRect(aircraftX, aircraftY, 60, 30);
+            }
         }
 
-        // Draw gun image with fallback
         if (gunImage != null) {
             g.drawImage(gunImage, gunX, gunY, 80, 60, this);
         } else {
@@ -107,11 +104,9 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
             g.fillRect(gunX, gunY, 40, 20);
         }
 
-        // Move gun towards aircraft
         if (gunX < aircraftX) gunX += 2;
         if (gunX > aircraftX) gunX -= 2;
 
-        // Draw bullets
         g.setColor(Color.RED);
         Iterator<int[]> iterator = bullets.iterator();
         while (iterator.hasNext()) {
@@ -119,19 +114,19 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
             g.fillRect(bullet[0], bullet[1], 5, 10);
             bullet[1] -= 10;
 
-            // Collision detection
-            if (new Rectangle(bullet[0], bullet[1], 5, 10).intersects(new Rectangle(aircraftX, aircraftY, 60, 30))) {
+            if (!exploded && new Rectangle(bullet[0], bullet[1], 5, 10)
+                    .intersects(new Rectangle(aircraftX, aircraftY, 100, 80))) {
                 gameOver = true;
+                exploded = true;
                 timer.stop();
-                playSound(gameOverClip); // Play the game over sound
+                playSound(gameOverClip);
+                repaint();
                 showGameOverDialog();
             }
 
-            // Remove bullets that go off screen
             if (bullet[1] < 0) iterator.remove();
         }
 
-        // Display score and timer
         g.setColor(Color.WHITE);
         g.drawString("Time: " + timeElapsed + "s", 20, 20);
         g.drawString("Score: " + score, 20, 40);
@@ -159,8 +154,10 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
         gunY = 450;
         bullets.clear();
         gameOver = false;
+        exploded = false;
         score = 0;
         timeElapsed = 0;
+        movingRight = true;
         timer.start();
         repaint();
     }
@@ -168,22 +165,25 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (!gameOver) {
+            if (movingRight) {
+                aircraftX += 5;
+                if (aircraftX > getWidth() - 100) {
+                    movingRight = false;
+                }
+            } else {
+                aircraftX -= 5;
+                if (aircraftX < 0) {
+                    movingRight = true;
+                }
+            }
+
             score++;
             repaint();
         }
     }
 
     @Override
-    public void keyPressed(KeyEvent e) {
-        if (!gameOver) {
-            if (e.getKeyCode() == KeyEvent.VK_LEFT && aircraftX > 0) {
-                aircraftX -= 20;
-            }
-            if (e.getKeyCode() == KeyEvent.VK_RIGHT && aircraftX < getWidth() - 60) {
-                aircraftX += 20;
-            }
-        }
-    }
+    public void keyPressed(KeyEvent e) {}
 
     @Override
     public void keyReleased(KeyEvent e) {}
@@ -195,8 +195,7 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
         JFrame frame = new JFrame("Aircraft Escape Game");
         AirCraftGame gamePanel = new AirCraftGame();
         frame.add(gamePanel);
-        frame.setSize(800, 800);
-
+        frame.setSize(600, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
