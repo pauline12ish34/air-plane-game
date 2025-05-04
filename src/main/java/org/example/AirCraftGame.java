@@ -3,6 +3,7 @@ package org.example;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import javax.sound.sampled.*;
@@ -22,6 +23,8 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
     private Image aircraftImage, gunImage, explosionImage, fireImage;
 
     private Clip shootClip, gameOverClip;
+//    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
 
     public AirCraftGame() {
         timer = new Timer(50, this);
@@ -34,7 +37,7 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
         gunImage = new ImageIcon("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\140mm.png").getImage();
 
 //        explosionImage = new ImageIcon("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\explosion.png").getImage();
-        fireImage = new ImageIcon("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\fire.png").getImage();
+        fireImage = new ImageIcon("C:\\Users\\user\\Documents\\Java Ass\\JavaGameAirspace\\explfire.png").getImage();
 
         loadSounds();
 
@@ -86,7 +89,7 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
 //                g.drawImage(explosionImage, aircraftX, aircraftY, 100, 80, this);
 //            }
             if (fireImage != null) {
-                g.drawImage(fireImage, aircraftX + 20, aircraftY + 20, 60, 60, this);
+                g.drawImage(fireImage, aircraftX + 10, aircraftY + 10, 300, 300, this);
             }
         } else {
             if (aircraftImage != null) {
@@ -98,9 +101,9 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
         }
 
         if (gunImage != null) {
-            g.drawImage(gunImage, gunX, gunY, 80, 60, this);
+            g.drawImage(gunImage, gunX, gunY, 100, 80, this);
         } else {
-            g.setColor(Color.BLACK);
+            g.setColor(Color.BLUE);
             g.fillRect(gunX, gunY, 40, 20);
         }
 
@@ -130,6 +133,7 @@ public class AirCraftGame extends JPanel implements ActionListener, KeyListener 
         g.setColor(Color.WHITE);
         g.drawString("Time: " + timeElapsed + "s", 20, 20);
         g.drawString("Score: " + score, 20, 40);
+//        g.drawString("date",+ datee, 20, 60);
 
         if (gameOver) {
             g.setColor(Color.RED);
